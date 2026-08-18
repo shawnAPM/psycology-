@@ -1,0 +1,65 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# 手機友善設定
+sns.set_theme(style="whitegrid")
+plt.rcParams['figure.dpi'] = 100  # 降低解析度，加快手機顯示
+
+np.random.seed(42)
+n = 500
+
+emotional_stability = np.random.normal(70, 12, n)
+leadership_potential = 25 + 0.6 * emotional_stability + np.random.normal(0, 8, n)
+
+emotional_stability = np.clip(emotional_stability, 0, 100)
+leadership_potential = np.clip(leadership_potential, 0, 100)
+
+df = pd.DataFrame({
+    'Emotional Stability': emotional_stability,
+    'Leadership Potential': leadership_potential,
+    'Employee ID': range(1, n + 1)
+})
+
+# 相關分析
+pearson_r, pearson_p = stats.pearsonr(df['Emotional Stability'], df['Leadership Potential'])
+spearman_rho, spearman_p = stats.spearmanr(df['Emotional Stability'], df['Leadership Potential'])
+
+print("=" * 40)
+print("相關分析結果")
+print("=" * 40)
+print(f"Pearson r: {pearson_r:.3f} (p = {pearson_p:.4f})")
+print(f"Spearman ρ: {spearman_rho:.3f} (p = {spearman_p:.4f})")
+print(f"樣本數: {len(df)}")
+print("=" * 40)
+
+# 手機友善圖表（上下排列，非左右並排）
+fig, axes = plt.subplots(2, 1, figsize=(8, 10))
+
+# 圖一：散點圖
+ax1 = axes[0]
+sns.scatterplot(data=df, x='Emotional Stability', y='Leadership Potential',
+                alpha=0.6, s=50, color='#4A90E2', edgecolor='white', ax=ax1)
+sns.regplot(data=df, x='Emotional Stability', y='Leadership Potential',
+            scatter=False, color='#E24A4A', line_kws={'linewidth': 2}, ci=95, ax=ax1)
+
+ax1.set_title(f'情緒穩定性 vs. 領導潛力\nPearson r = {pearson_r:.3f}', 
+              fontsize=12, fontweight='bold')
+ax1.set_xlim(0, 100)
+ax1.set_ylim(0, 100)
+
+# 圖二：熱力圖
+ax2 = axes[1]
+corr_matrix = df[['Emotional Stability', 'Leadership Potential']].corr()
+
+sns.heatmap(corr_matrix, annot=True, fmt='.3f', cmap='RdBu_r', center=0,
+            vmin=-1, vmax=1, square=True, linewidths=1, linecolor='white',
+            cbar_kws={'label': '相關係數', 'shrink': 0.8},
+            annot_kws={'size': 12, 'fontweight': 'bold'}, ax=ax2)
+
+ax2.set_title('相關矩陣熱力圖', fontsize=12, fontweight='bold')
+
+plt.tight_layout()
+plt.show()
